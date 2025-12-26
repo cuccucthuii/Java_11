@@ -1,4 +1,4 @@
-package HomeWork;
+package HomeWork.Xs2;
 
 import java.util.Scanner;
 

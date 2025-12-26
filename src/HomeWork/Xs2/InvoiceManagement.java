@@ -1,5 +1,7 @@
 package HomeWork.Xs2;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Scanner;
 
 public class InvoiceManagement {
@@ -37,6 +39,7 @@ public class InvoiceManagement {
                     break;
                 case 3:
                     System.out.println("--> Đang xem: Báo cáo doanh thu...");
+                    mainDanhThu();
                     break;
                 case 4:
                     System.out.println("Đã thoát chương trình. Tạm biệt!");
@@ -190,9 +193,25 @@ public class InvoiceManagement {
             return;
         }
 
-        for (int i = 0; i < currentProd; i++) {
+        for (int i = 0; i < currentInvoice; i++) {
+            Invoice invoice = arrInvoice[i];
+            InvoiceDetail[] details = invoice.getInvoiceDetails();
+            if (details != null) {
+                for (int j = 0; j < details.length; j++) {
+                    if (details[j] != null && details[j].getProduct() != null) {
+                        if (details[j].getProduct().getProductId().equals(id)) {
+                            System.out.println("Tồn tại sản phẩm trong hoá đơn. Không thể xoá");
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        for (int i = indexDelete; i < currentProd - 1; i++) {
             arrProd[i] = arrProd[i + 1];
         }
+        arrProd[currentProd - 1] = null;
         currentProd--;
     }
 
@@ -373,7 +392,7 @@ public class InvoiceManagement {
             System.out.println("Không tìm thấy hoá đơn");
             return;
         }
-            arrInvoice[indexSearch].displayInvoice();
+        arrInvoice[indexSearch].displayInvoice();
     }
 
     public static void searchInvoiceByName(Scanner scanner) {
@@ -405,4 +424,136 @@ public class InvoiceManagement {
         }
         return -1;
     }
+
+    public static void mainDanhThu() {
+        Scanner scanner = new Scanner(System.in);
+        do {
+            System.out.println("================= QUẢN LÝ DOANH THU =================");
+            System.out.println("1. Tính tổng doanh thu tất cả hóa đơn");
+            System.out.println("2. Tìm hóa đơn có giá trị lớn nhất");
+            System.out.println("3. Thống kê số hóa đơn theo khoảng ngày (nhập từ - đến)");
+            System.out.println("4. Thống kê tổng doanh thu theo khoảng ngày");
+            System.out.println("5. Thoát");
+            System.out.println("=====================================================");
+            System.out.print("Lựa chọn của bạn: ");
+
+            int subChoice = Integer.parseInt(scanner.nextLine());
+
+            switch (subChoice) {
+                case 1:
+                    System.out.println("--> Đang tính toán: Tổng doanh thu toàn bộ cửa hàng...");
+                    totalAmount();
+                    break;
+                case 2:
+                    System.out.println("--> Đang tìm kiếm: Hóa đơn có giá trị cao nhất...");
+                    searchMaxInvoice();
+                    break;
+                case 3:
+                    System.out.println("--> Chức năng: Đếm số hóa đơn trong khoảng thời gian...");
+                    System.out.println("    (Gợi ý: Nhập ngày bắt đầu và ngày kết thúc)");
+                    countInvoice(scanner);
+                    break;
+                case 4:
+                    System.out.println("--> Chức năng: Tính tổng tiền thu được trong khoảng thời gian...");
+                    totalRevenueByDateRange(scanner);
+                    break;
+                case 5:
+                    System.out.println("... Quay lại menu chính.");
+                    return;
+                default:
+                    System.out.println("!! Lựa chọn không hợp lệ (Nhập từ 1-5).");
+            }
+            System.out.println(); // Dòng trống cho thoáng
+
+        } while (true);
+    }
+
+    public static void totalAmount() {
+        if (currentInvoice == 0) {
+            System.out.println("Chưa có hoá đơn nào!");
+            return;
+        }
+        double totalAmount = 0;
+
+        for (int i = 0; i < currentInvoice; i++) {
+            totalAmount += arrInvoice[i].getTotalAmount();
+        }
+        System.out.println("Total amount: " + totalAmount);
+    }
+
+    public static void searchMaxInvoice() {
+        if (currentInvoice == 0) {
+            System.out.println("Chưa có dữ liệu");
+            return;
+        }
+
+        Invoice maxInvoice = arrInvoice[0];
+
+        for (int i = 1; i < currentInvoice; i++) {
+            if (arrInvoice[i].getTotalAmount() > maxInvoice.getTotalAmount()) {
+                maxInvoice = arrInvoice[i];
+            }
+        }
+        System.out.println("Hoá đơn cao nhất: ");
+        maxInvoice.displayInvoice();
+    }
+
+    public static void countInvoice(Scanner scanner) {
+        if (currentInvoice == 0) {
+            System.out.println("Chưa có dữ liệu}");
+            return;
+        }
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+        sdf.setLenient(false);
+        try {
+            int count = 0;
+            System.out.println("Nhập vào khoảng thời gian từ: ");
+            Date date1 = sdf.parse(scanner.nextLine());
+            System.out.println("Đến: ");
+            Date date2 = sdf.parse(scanner.nextLine());
+
+            for (int i = 0; i < currentInvoice; i++) {
+                if (arrInvoice[i] != null) {
+                    Date date = arrInvoice[i].getInvoiceDate();
+                    if (!date.before(date1) && !date.after(date2)) {
+                        count++;
+                    }
+                }
+            }
+            System.out.println("Số lượng hoá đơn trong khoảng ngày: " + count);
+        } catch (Exception e) {
+            System.out.println("Vui lòng nhập đúng format date" + e.getMessage());
+        }
+
+
+    }
+
+    public static void totalRevenueByDateRange(Scanner scanner) {
+        if (currentInvoice == 0) {
+            System.out.println("Chưa có giữ liệu");
+            return;
+        }
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+        sdf.setLenient(false);
+
+        try {
+            System.out.println("Nhập vào ngày bắt đầu: ");
+            Date date1 = sdf.parse(scanner.nextLine());
+            System.out.println("Đến: ");
+            Date date2 = sdf.parse(scanner.nextLine());
+            double totalRevenue = 0;
+            for (int i = 0; i < currentInvoice; i++) {
+                if (arrInvoice[i] != null) {
+                    Date date = arrInvoice[i].getInvoiceDate();
+                    if (!date.before(date1) && !date.after(date2)) {
+                        totalRevenue += arrInvoice[i].totalAmount();
+                    }
+                }
+            }
+            System.out.println("Total revenue: " + totalRevenue);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
 }

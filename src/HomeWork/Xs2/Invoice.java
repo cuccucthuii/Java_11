@@ -157,12 +157,13 @@ public class Invoice {
     }
 
     //totalAmount – double: tổng tiền hóa đơn (tính từ invoiceDetails)
-    public void totalAmount() {
+    public double totalAmount() {
         double total = 0;
         for (int i = 0; i < invoiceDetails.length; i++) {
             total += invoiceDetails[i].getSubtotal();
         }
         this.totalAmount = total;
+        return total;
     }
 
 }
